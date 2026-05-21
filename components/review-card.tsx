@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Eye, EyeOff } from "lucide-react";
 import { StarRating } from "@/components/star-rating";
 import { Badge } from "@/components/ui/badge";
+import { DefaultAvatar } from "@/components/default-avatar";
 import { cn, formatDate } from "@/lib/utils";
 import type { FamilyMetricKey, FamilyMetrics, VibeTag } from "@/lib/types";
 import { FAMILY_METRIC_LABELS, FAMILY_METRIC_KEYS } from "@/lib/types";
@@ -28,20 +29,20 @@ export function ReviewCard({ review }: { review: ReviewCardData }) {
     <article className="rounded-md border border-border bg-card p-4">
       <header className="flex items-start gap-3">
         <Link href={`/profile/${review.author.username}`} className="shrink-0">
-          {review.author.avatar_url ? (
-            <Image
-              src={review.author.avatar_url}
-              alt=""
-              width={36}
-              height={36}
-              className="h-9 w-9 rounded-full object-cover"
-              unoptimized
-            />
-          ) : (
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-xs font-semibold uppercase">
-              {review.author.username.slice(0, 2)}
-            </span>
-          )}
+          <div className="h-9 w-9 overflow-hidden rounded-full">
+            {review.author.avatar_url ? (
+              <Image
+                src={review.author.avatar_url}
+                alt=""
+                width={36}
+                height={36}
+                className="h-full w-full object-cover"
+                unoptimized
+              />
+            ) : (
+              <DefaultAvatar />
+            )}
+          </div>
         </Link>
         <div className="flex-1 space-y-0.5">
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">

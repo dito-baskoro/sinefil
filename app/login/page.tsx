@@ -29,7 +29,7 @@ export default async function LoginPage({
         <CardHeader>
           <CardTitle className="text-2xl">Masuk ke Sinefil</CardTitle>
           <CardDescription>
-            Letterboxd-nya film Indonesia. Login sekali, langsung review.
+            Platform film Indonesia. Login sekali, langsung review.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

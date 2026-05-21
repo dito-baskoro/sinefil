@@ -1,6 +1,6 @@
 # Sinefil 🇮🇩🍿
 
-**Letterboxd-nya film Indonesia.** Review, rating, dan vibe — semua dalam konteks lokal.
+**Platform film Indonesia.**
 
 ## Apa yang Sinefil bikin beda
 

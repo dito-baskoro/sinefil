@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Film, LogIn, Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
+import { DefaultAvatar } from "@/components/default-avatar";
 
 export async function SiteHeader() {
   let username: string | null = null;
@@ -51,20 +52,20 @@ export async function SiteHeader() {
             className="flex items-center gap-2 rounded-full text-sm hover:opacity-80"
             aria-label={`Profil ${username}`}
           >
-            {avatarUrl ? (
-              <Image
-                src={avatarUrl}
-                alt=""
-                width={32}
-                height={32}
-                className="h-8 w-8 rounded-full object-cover"
-                unoptimized
-              />
-            ) : (
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-xs font-semibold uppercase">
-                {username.slice(0, 2)}
-              </span>
-            )}
+            <div className="h-8 w-8 overflow-hidden rounded-full">
+              {avatarUrl ? (
+                <Image
+                  src={avatarUrl}
+                  alt=""
+                  width={32}
+                  height={32}
+                  className="h-full w-full object-cover"
+                  unoptimized
+                />
+              ) : (
+                <DefaultAvatar />
+              )}
+            </div>
             <span className="hidden sm:inline">{username}</span>
           </Link>
         ) : (

@@ -23,9 +23,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="id" className={`dark ${inter.variable}`} suppressHydrationWarning>
-      <body className="min-h-dvh bg-background font-sans text-foreground antialiased">
+      <body className="flex min-h-dvh flex-col bg-background font-sans text-foreground antialiased">
         <SiteHeader />
-        <main className="container py-8">{children}</main>
+        <main className="container flex-1 py-8">{children}</main>
         <footer className="container mt-16 border-t border-border py-6 text-sm text-muted-foreground">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span>© Sinefil 2026</span>

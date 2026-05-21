@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DefaultAvatar } from "@/components/default-avatar";
 import { completeOnboarding } from "./actions";
 
 export function OnboardingForm({
@@ -60,10 +61,12 @@ export function OnboardingForm({
       <div className="space-y-2">
         <Label htmlFor="avatar">Foto profil (opsional)</Label>
         <div className="flex items-center gap-3">
-          <div className="h-16 w-16 overflow-hidden rounded-full border border-border bg-secondary">
+          <div className="h-16 w-16 overflow-hidden rounded-full border border-border">
             {avatarPreview ? (
               <Image src={avatarPreview} alt="" width={64} height={64} className="h-full w-full object-cover" unoptimized />
-            ) : null}
+            ) : (
+              <DefaultAvatar />
+            )}
           </div>
           <Input
             id="avatar"

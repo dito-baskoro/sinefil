@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDate, tmdbImage } from "@/lib/utils";
 import { EditBioDialog } from "./edit-bio-dialog";
+import { DefaultAvatar } from "@/components/default-avatar";
 import type { VibeTag } from "@/lib/types";
 
 type Params = { username: string };
@@ -30,6 +31,7 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
   const { data: profile } = await supabase
     .from("profiles")
     .select("id, username, display_name, avatar_url, bio, created_at")
+
     .eq("username", username)
     .maybeSingle();
   if (!profile) notFound();
@@ -90,20 +92,20 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
   return (
     <div className="space-y-8">
       <header className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-        {profile.avatar_url ? (
-          <Image
-            src={profile.avatar_url}
-            alt=""
-            width={96}
-            height={96}
-            className="h-24 w-24 rounded-full border border-border object-cover"
-            unoptimized
-          />
-        ) : (
-          <div className="flex h-24 w-24 items-center justify-center rounded-full border border-border bg-secondary text-2xl font-semibold uppercase">
-            {profile.username.slice(0, 2)}
-          </div>
-        )}
+        <div className="h-24 w-24 overflow-hidden rounded-full border border-border">
+          {profile.avatar_url ? (
+            <Image
+              src={profile.avatar_url}
+              alt=""
+              width={96}
+              height={96}
+              className="h-full w-full object-cover"
+              unoptimized
+            />
+          ) : (
+            <DefaultAvatar />
+          )}
+        </div>
         <div className="flex-1 space-y-1">
           <h1 className="text-2xl font-bold">{profile.display_name || profile.username}</h1>
           <p className="text-sm text-muted-foreground">@{profile.username}</p>
@@ -125,7 +127,11 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
         </div>
         {isOwner && (
           <div className="flex gap-2">
-            <EditBioDialog initialBio={profile.bio ?? ""} />
+            <EditBioDialog
+              initialBio={profile.bio ?? ""}
+              initialDisplayName={profile.display_name ?? ""}
+              initialAvatarUrl={profile.avatar_url ?? null}
+            />
             <form action="/auth/sign-out" method="post">
               <button className="rounded-md border border-input px-3 py-1.5 text-sm hover:bg-secondary">
                 Keluar

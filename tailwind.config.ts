@@ -53,6 +53,15 @@ const config: Config = {
       fontFamily: {
         sans: ["var(--font-inter)", "system-ui", "sans-serif"],
       },
+      keyframes: {
+        "film-loop": {
+          "0%, 100%": { opacity: "1", transform: "scale(1)" },
+          "50%": { opacity: "0.55", transform: "scale(0.94)" },
+        },
+      },
+      animation: {
+        "film-loop": "film-loop 1.4s ease-in-out infinite",
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],
