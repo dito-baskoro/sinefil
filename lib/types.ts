@@ -77,7 +77,7 @@ export type ReviewVibeTag = {
   vibe_tag_id: number;
 };
 
-export type ReactionKind = "ngakak" | "relatable" | "ngadi_ngadi" | "gas" | "bosen";
+export type ReactionKind = "ngakak" | "relatable" | "ngadi_ngadi" | "gas" | "bosen" | "dislike";
 
 export type ReviewReaction = {
   review_id: string;
@@ -101,6 +101,7 @@ export const REACTION_KINDS: { kind: ReactionKind; emoji: string; label: string 
   { kind: "ngadi_ngadi",  emoji: "🤨", label: "Ngadi-ngadi" },
   { kind: "gas",          emoji: "🔥", label: "Gas tonton" },
   { kind: "bosen",        emoji: "😴", label: "Bosen" },
+  { kind: "dislike",      emoji: "👎", label: "Gak suka" },
 ];
 
 export type Follow = {

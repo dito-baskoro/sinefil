@@ -17,6 +17,7 @@ type ProfileLite = {
   username: string;
   display_name: string | null;
   avatar_url: string | null;
+  is_admin: boolean;
 };
 
 type ReviewRow = {
@@ -78,7 +79,7 @@ export default async function FeedPage() {
       .from("reviews")
       .select(
         `id, user_id, rating, review_text, contains_spoiler, created_at,
-         actor:profiles!reviews_user_id_fkey(id, username, display_name, avatar_url),
+         actor:profiles!reviews_user_id_fkey(id, username, display_name, avatar_url, is_admin),
          movie:movies!reviews_movie_id_fkey(id, tmdb_id, title, poster_path),
          review_vibe_tags(vibe_tag_id)`
       )
@@ -90,7 +91,7 @@ export default async function FeedPage() {
       .from("lists")
       .select(
         `id, user_id, title, description, created_at,
-         actor:profiles!lists_user_id_fkey(id, username, display_name, avatar_url),
+         actor:profiles!lists_user_id_fkey(id, username, display_name, avatar_url, is_admin),
          list_items(movie:movies!list_items_movie_id_fkey(poster_path))`
       )
       .in("user_id", followeeIds)
@@ -237,6 +238,11 @@ function FeedItem({
             <span className="font-medium text-foreground">
               {event.actor.display_name || event.actor.username}
             </span>
+            {event.actor.is_admin && (
+              <Badge variant="default" className="h-4 px-1.5 text-[10px] font-medium">
+                Admin
+              </Badge>
+            )}
           </Link>
           <span>
             {event.kind === "review" ? "review film" : "bikin list"} ·{" "}

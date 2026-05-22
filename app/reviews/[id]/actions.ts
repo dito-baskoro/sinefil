@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
 import type { ReactionKind } from "@/lib/types";
 
-const REACTION_KINDS: ReactionKind[] = ["ngakak", "relatable", "ngadi_ngadi", "gas", "bosen"];
+const REACTION_KINDS: ReactionKind[] = ["ngakak", "relatable", "ngadi_ngadi", "gas", "bosen", "dislike"];
 
 export async function toggleReaction(
   reviewId: string,

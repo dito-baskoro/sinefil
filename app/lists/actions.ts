@@ -78,7 +78,15 @@ export async function deleteList(listId: string): Promise<Result> {
   const { supabase, user } = await getUser();
   if (!user) return { error: "Login dulu." };
 
-  const { error } = await supabase.from("lists").delete().eq("id", listId).eq("user_id", user.id);
+  const { data: me } = await supabase
+    .from("profiles")
+    .select("is_admin")
+    .eq("id", user.id)
+    .maybeSingle();
+  const isAdmin = Boolean(me?.is_admin);
+
+  const deletion = supabase.from("lists").delete().eq("id", listId);
+  const { error } = isAdmin ? await deletion : await deletion.eq("user_id", user.id);
   if (error) return { error: error.message };
   revalidatePath("/lists");
   redirect("/lists");
@@ -171,6 +179,48 @@ export async function removeListItem(
   revalidatePath(`/lists/${listId}`);
   revalidatePath(`/lists/${listId}/edit`);
   return {};
+}
+
+export async function toggleListBookmark(
+  listId: string,
+): Promise<Result<{ bookmarked: boolean }>> {
+  if (!isSupabaseConfigured()) return { error: "Supabase belum dikonfigurasi." };
+  const { supabase, user } = await getUser();
+  if (!user) return { error: "Login dulu." };
+
+  const { data: list } = await supabase
+    .from("lists")
+    .select("user_id, is_public")
+    .eq("id", listId)
+    .maybeSingle();
+  if (!list) return { error: "List tidak ditemukan." };
+  if (list.user_id === user.id) return { error: "List sendiri tidak perlu disimpan." };
+  if (!list.is_public) return { error: "List ini privat." };
+
+  const { data: existing } = await supabase
+    .from("list_bookmarks")
+    .select("list_id")
+    .eq("user_id", user.id)
+    .eq("list_id", listId)
+    .maybeSingle();
+
+  if (existing) {
+    const { error } = await supabase
+      .from("list_bookmarks")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("list_id", listId);
+    if (error) return { error: error.message };
+    revalidatePath(`/lists/${listId}`);
+    return { bookmarked: false };
+  }
+
+  const { error } = await supabase
+    .from("list_bookmarks")
+    .insert({ user_id: user.id, list_id: listId });
+  if (error) return { error: error.message };
+  revalidatePath(`/lists/${listId}`);
+  return { bookmarked: true };
 }
 
 export async function reorderListItems(

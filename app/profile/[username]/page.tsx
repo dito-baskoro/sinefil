@@ -65,6 +65,17 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
     .select("follower_id", { count: "exact", head: true })
     .eq("follower_id", profile.id);
 
+  const { count: listCount } = await supabase
+    .from("lists")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", profile.id)
+    .eq("is_public", true);
+
+  const { count: bookmarkCount } = await supabase
+    .from("list_bookmarks")
+    .select("list_id", { count: "exact", head: true })
+    .eq("user_id", profile.id);
+
   let initialFollowing = false;
   if (user && !isOwner) {
     const { data: existingFollow } = await supabase
@@ -170,7 +181,7 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
             <p className="text-sm text-muted-foreground">📍 {profile.location}</p>
           )}
           {profile.bio && <p className="max-w-prose text-sm">{profile.bio}</p>}
-          <div className="flex flex-wrap gap-3 pt-1 text-sm">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1 text-sm">
             <Link
               href={`/profile/${profile.username}/followers`}
               className="hover:underline"
@@ -189,22 +200,14 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
               href={`/profile/${profile.username}/lists`}
               className="inline-flex items-center gap-1 rounded-full border border-input px-2.5 py-0.5 text-xs font-medium hover:bg-secondary"
             >
-              List film
+              List film <span className="tabular-nums text-muted-foreground">{listCount ?? 0}</span>
             </Link>
-          </div>
-          <div className="flex flex-wrap gap-3 pt-1 text-sm">
-            <span>
-              <strong className="tabular-nums">{reviews.length}</strong>{" "}
-              <span className="text-muted-foreground">review</span>
-            </span>
-            <span>
-              <strong className="tabular-nums">{watchedCount ?? 0}</strong>{" "}
-              <span className="text-muted-foreground">sudah ditonton</span>
-            </span>
-            <span>
-              <strong className="tabular-nums">{wantCount ?? 0}</strong>{" "}
-              <span className="text-muted-foreground">mau nonton</span>
-            </span>
+            <Link
+              href={`/profile/${profile.username}/bookmarks`}
+              className="inline-flex items-center gap-1 rounded-full border border-input px-2.5 py-0.5 text-xs font-medium hover:bg-secondary"
+            >
+              List tersimpan <span className="tabular-nums text-muted-foreground">{bookmarkCount ?? 0}</span>
+            </Link>
           </div>
         </div>
         {isOwner ? (
@@ -281,6 +284,20 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
               </div>
             );
           })}
+        </div>
+        <div className="flex max-w-md flex-wrap items-center gap-x-4 gap-y-1 rounded-md border border-border bg-secondary/40 px-3 py-1.5 text-sm">
+          <span>
+            <strong className="tabular-nums">{reviews.length}</strong>{" "}
+            <span className="text-muted-foreground">review</span>
+          </span>
+          <span>
+            <strong className="tabular-nums">{watchedCount ?? 0}</strong>{" "}
+            <span className="text-muted-foreground">ditonton</span>
+          </span>
+          <span>
+            <strong className="tabular-nums">{wantCount ?? 0}</strong>{" "}
+            <span className="text-muted-foreground">mau nonton</span>
+          </span>
         </div>
       </section>
 

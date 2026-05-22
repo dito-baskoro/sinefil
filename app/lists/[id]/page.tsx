@@ -7,6 +7,8 @@ import { isSupabaseConfigured } from "@/lib/env";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatDate, tmdbImage } from "@/lib/utils";
+import { BookmarkListButton } from "./bookmark-button";
+import { AdminDeleteListButton } from "./admin-delete-button";
 
 type Params = { id: string };
 
@@ -49,7 +51,33 @@ export default async function ListDetail({ params }: { params: Promise<Params> }
   } = await supabase.auth.getUser();
   const isOwner = user?.id === list.user_id;
 
+  let isAdmin = false;
+  if (user && !isOwner) {
+    const { data: me } = await supabase
+      .from("profiles")
+      .select("is_admin")
+      .eq("id", user.id)
+      .maybeSingle();
+    isAdmin = Boolean(me?.is_admin);
+  }
+
   const profile = Array.isArray(list.profile) ? list.profile[0] : list.profile;
+
+  const { count: bookmarkCount } = await supabase
+    .from("list_bookmarks")
+    .select("list_id", { count: "exact", head: true })
+    .eq("list_id", id);
+
+  let initialBookmarked = false;
+  if (user && !isOwner) {
+    const { data: existingBookmark } = await supabase
+      .from("list_bookmarks")
+      .select("list_id")
+      .eq("user_id", user.id)
+      .eq("list_id", id)
+      .maybeSingle();
+    initialBookmarked = Boolean(existingBookmark);
+  }
 
   const { data: itemRows } = await supabase
     .from("list_items")
@@ -72,10 +100,22 @@ export default async function ListDetail({ params }: { params: Promise<Params> }
       <header className="space-y-2">
         <div className="flex items-start justify-between gap-2">
           <h1 className="text-3xl font-bold">{list.title}</h1>
-          {isOwner && (
+          {isOwner ? (
             <Button asChild variant="outline" size="sm">
               <Link href={`/lists/${list.id}/edit`}>Edit</Link>
             </Button>
+          ) : (
+            <div className="flex items-start gap-2">
+              {list.is_public && (
+                <BookmarkListButton
+                  listId={list.id}
+                  initialBookmarked={initialBookmarked}
+                  initialCount={bookmarkCount ?? 0}
+                  isLoggedIn={Boolean(user)}
+                />
+              )}
+              {isAdmin && <AdminDeleteListButton listId={list.id} />}
+            </div>
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">

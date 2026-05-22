@@ -26,7 +26,7 @@ export function MovieSearchPicker({
   return (
     <div className="space-y-3">
       <form
-        className="flex gap-2"
+        className="flex items-stretch gap-2"
         onSubmit={(e) => {
           e.preventDefault();
           const q = query.trim();
@@ -61,7 +61,7 @@ export function MovieSearchPicker({
             </button>
           )}
         </label>
-        <Button type="submit" size="sm" disabled={searching || !query.trim()}>
+        <Button type="submit" size="sm" className="h-auto" disabled={searching || !query.trim()}>
           {searching ? "..." : "Cari"}
         </Button>
       </form>
