@@ -6,6 +6,7 @@ import { isSupabaseConfigured } from "@/lib/env";
 import { DefaultAvatar } from "@/components/default-avatar";
 
 export async function SiteHeader() {
+  let isLoggedIn = false;
   let username: string | null = null;
   let avatarUrl: string | null = null;
 
@@ -15,6 +16,7 @@ export async function SiteHeader() {
       data: { user },
     } = await supabase.auth.getUser();
     if (user) {
+      isLoggedIn = true;
       const { data: profile } = await supabase
         .from("profiles")
         .select("username, avatar_url")
@@ -46,11 +48,11 @@ export async function SiteHeader() {
           </label>
         </form>
 
-        {username ? (
+        {isLoggedIn ? (
           <Link
-            href={`/profile/${username}`}
+            href={username ? `/profile/${username}` : "/onboarding"}
             className="flex items-center gap-2 rounded-full text-sm hover:opacity-80"
-            aria-label={`Profil ${username}`}
+            aria-label={username ? `Profil ${username}` : "Selesaikan onboarding"}
           >
             <div className="h-8 w-8 overflow-hidden rounded-full">
               {avatarUrl ? (
@@ -66,7 +68,7 @@ export async function SiteHeader() {
                 <DefaultAvatar />
               )}
             </div>
-            <span className="hidden sm:inline">{username}</span>
+            <span className="hidden sm:inline">{username ?? "Lengkapi profil"}</span>
           </Link>
         ) : (
           <Link

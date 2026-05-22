@@ -24,9 +24,8 @@ export function Loading({
         className
       )}
     >
-      <div className="flex animate-film-loop items-center gap-2 text-primary">
+      <div className="animate-film-loop text-primary">
         <Film className="h-8 w-8" strokeWidth={2.5} aria-hidden />
-        <span className="text-xl font-bold tracking-tight">Sinefil</span>
       </div>
       {label && <p className="text-sm text-muted-foreground">{label}</p>}
     </div>

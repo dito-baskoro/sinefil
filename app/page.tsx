@@ -10,6 +10,7 @@ import type { FamilyMetrics, VibeTag } from "@/lib/types";
 export default async function HomePage() {
   const trending = await discoverIndonesian({ sort: "popularity.desc" });
   const recentReviews = await loadRecentReviews();
+  const isLoggedIn = await getIsLoggedIn();
 
   return (
     <div className="space-y-12">
@@ -24,7 +25,7 @@ export default async function HomePage() {
           <Button asChild>
             <Link href="/movies">Cari film</Link>
           </Button>
-          {isSupabaseConfigured() && (
+          {isSupabaseConfigured() && !isLoggedIn && (
             <Button asChild variant="outline">
               <Link href="/login">Login pakai Google</Link>
             </Button>
@@ -107,6 +108,15 @@ async function loadRecentReviews(): Promise<ReviewCardData[]> {
         .filter((x): x is VibeTag => Boolean(x)),
     };
   });
+}
+
+async function getIsLoggedIn(): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false;
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return !!user;
 }
 
 function SetupBanner() {

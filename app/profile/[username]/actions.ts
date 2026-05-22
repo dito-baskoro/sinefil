@@ -40,7 +40,7 @@ export async function updateProfile(formData: FormData): Promise<{ error?: strin
     }
     const ext = (avatarFile.name.split(".").pop() || "jpg").toLowerCase();
     const path = `${user.id}/avatar.${ext}`;
-    const service = await createServiceClient();
+    const service = createServiceClient();
 
     // Clear any previous file (different extension) before writing the new one.
     const { data: existing } = await service.storage.from("avatars").list(user.id);
@@ -76,7 +76,7 @@ export async function deleteAvatar(): Promise<{ error?: string }> {
   } = await supabase.auth.getUser();
   if (!user) return { error: "Sesi habis." };
 
-  const service = await createServiceClient();
+  const service = createServiceClient();
   const { data: files } = await service.storage.from("avatars").list(user.id);
   if (files?.length) {
     await service.storage

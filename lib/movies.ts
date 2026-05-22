@@ -20,7 +20,7 @@ export async function ensureMovieCached(
     return { row: null, detail };
   }
 
-  const service = await createServiceClient();
+  const service = createServiceClient();
   const { data: existing } = await service
     .from("movies")
     .select("*")

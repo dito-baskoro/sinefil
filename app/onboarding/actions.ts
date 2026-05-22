@@ -39,7 +39,7 @@ export async function completeOnboarding(formData: FormData): Promise<{ error?: 
     }
     const ext = avatarFile.name.split(".").pop()?.toLowerCase() || "jpg";
     const path = `${user.id}/avatar.${ext}`;
-    const service = await createServiceClient();
+    const service = createServiceClient();
     const { error: uploadError } = await service.storage
       .from("avatars")
       .upload(path, avatarFile, { contentType: avatarFile.type, upsert: true });
