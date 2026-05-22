@@ -16,8 +16,10 @@ import { WatchlistButton } from "@/components/watchlist-button";
 import {
   FAMILY_METRIC_KEYS,
   FAMILY_METRIC_LABELS,
+  REACTION_KINDS,
   type FamilyMetrics,
   type FamilyMetricKey,
+  type ReactionKind,
   type VibeTag,
   type WatchlistStatus,
 } from "@/lib/types";
@@ -80,8 +82,8 @@ export default async function MovieDetailPage({ params }: { params: Promise<Para
       const { data: reviewRows } = await supabase
         .from("reviews")
         .select(
-          `id, rating, review_text, contains_spoiler, created_at, user_id,
-           author:profiles!reviews_user_id_fkey(username, avatar_url, display_name),
+          `id, rating, review_text, contains_spoiler, created_at, updated_at, user_id,
+           author:profiles!reviews_user_id_fkey(username, avatar_url, display_name, is_admin),
            family_metrics(*),
            review_vibe_tags(vibe_tag_id)`
         )
@@ -96,8 +98,9 @@ export default async function MovieDetailPage({ params }: { params: Promise<Para
         review_text: string | null;
         contains_spoiler: boolean;
         created_at: string;
+        updated_at: string | null;
         user_id: string;
-        author: { username: string; avatar_url: string | null; display_name: string | null } | { username: string; avatar_url: string | null; display_name: string | null }[] | null;
+        author: { username: string; avatar_url: string | null; display_name: string | null; is_admin: boolean } | { username: string; avatar_url: string | null; display_name: string | null; is_admin: boolean }[] | null;
         family_metrics: FamilyMetrics | FamilyMetrics[] | null;
         review_vibe_tags: { vibe_tag_id: number }[] | null;
       }) => {
@@ -109,13 +112,60 @@ export default async function MovieDetailPage({ params }: { params: Promise<Para
           review_text: r.review_text,
           contains_spoiler: r.contains_spoiler,
           created_at: r.created_at,
-          author: author ?? { username: "?", avatar_url: null, display_name: null },
+          updated_at: r.updated_at,
+          author: author ?? { username: "?", avatar_url: null, display_name: null, is_admin: false },
           family: fam ?? null,
           vibeTags: (r.review_vibe_tags ?? [])
             .map((rvt) => tagById.get(rvt.vibe_tag_id))
             .filter((x): x is VibeTag => Boolean(x)),
         };
       });
+
+      const reviewIds = reviews.map((r) => r.id);
+      if (reviewIds.length > 0) {
+        const [{ data: reactionRows }, { data: commentRows }] = await Promise.all([
+          supabase
+            .from("review_reactions")
+            .select("review_id, kind, user_id")
+            .in("review_id", reviewIds),
+          supabase
+            .from("review_comments")
+            .select("review_id")
+            .in("review_id", reviewIds),
+        ]);
+
+        const countsByReview = new Map<string, Record<ReactionKind, number>>();
+        const activeByReview = new Map<string, ReactionKind[]>();
+        for (const id of reviewIds) {
+          countsByReview.set(
+            id,
+            Object.fromEntries(REACTION_KINDS.map((r) => [r.kind, 0])) as Record<ReactionKind, number>,
+          );
+          activeByReview.set(id, []);
+        }
+        for (const row of reactionRows ?? []) {
+          const kind = row.kind as ReactionKind;
+          const counts = countsByReview.get(row.review_id as string);
+          if (counts && kind in counts) counts[kind] += 1;
+          if (currentUserId && row.user_id === currentUserId) {
+            activeByReview.get(row.review_id as string)?.push(kind);
+          }
+        }
+
+        const commentCountByReview = new Map<string, number>();
+        for (const id of reviewIds) commentCountByReview.set(id, 0);
+        for (const row of commentRows ?? []) {
+          const id = row.review_id as string;
+          commentCountByReview.set(id, (commentCountByReview.get(id) ?? 0) + 1);
+        }
+
+        reviews = reviews.map((r) => ({
+          ...r,
+          reactionCounts: countsByReview.get(r.id),
+          activeReactions: activeByReview.get(r.id) ?? [],
+          commentCount: commentCountByReview.get(r.id) ?? 0,
+        }));
+      }
 
       // Aggregate family metrics
       for (const key of FAMILY_METRIC_KEYS) {
@@ -320,7 +370,7 @@ export default async function MovieDetailPage({ params }: { params: Promise<Para
         ) : (
           <div className="space-y-3">
             {reviews.map((r) => (
-              <ReviewCard key={r.id} review={r} />
+              <ReviewCard key={r.id} review={r} isLoggedIn={Boolean(currentUserId)} />
             ))}
           </div>
         )}

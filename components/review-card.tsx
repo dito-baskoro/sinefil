@@ -3,13 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, MessageSquare } from "lucide-react";
 import { StarRating } from "@/components/star-rating";
 import { Badge } from "@/components/ui/badge";
 import { DefaultAvatar } from "@/components/default-avatar";
 import { cn, formatDate } from "@/lib/utils";
-import type { FamilyMetricKey, FamilyMetrics, VibeTag } from "@/lib/types";
-import { FAMILY_METRIC_LABELS, FAMILY_METRIC_KEYS } from "@/lib/types";
+import type { FamilyMetricKey, FamilyMetrics, ReactionKind, VibeTag } from "@/lib/types";
+import { FAMILY_METRIC_LABELS, FAMILY_METRIC_KEYS, REACTION_KINDS } from "@/lib/types";
+import { ReactionBar } from "@/app/reviews/[id]/reaction-bar";
 
 export type ReviewCardData = {
   id: string;
@@ -17,13 +18,27 @@ export type ReviewCardData = {
   review_text: string | null;
   contains_spoiler: boolean;
   created_at: string;
-  author: { username: string; avatar_url: string | null; display_name: string | null };
+  updated_at?: string | null;
+  author: { username: string; avatar_url: string | null; display_name: string | null; is_admin?: boolean };
   family: FamilyMetrics | null;
   vibeTags: VibeTag[];
+  reactionCounts?: Record<ReactionKind, number>;
+  activeReactions?: ReactionKind[];
+  commentCount?: number;
 };
 
-export function ReviewCard({ review }: { review: ReviewCardData }) {
+export function ReviewCard({
+  review,
+  isLoggedIn = false,
+}: {
+  review: ReviewCardData;
+  isLoggedIn?: boolean;
+}) {
   const [revealed, setRevealed] = useState(!review.contains_spoiler);
+  const counts =
+    review.reactionCounts ??
+    (Object.fromEntries(REACTION_KINDS.map((r) => [r.kind, 0])) as Record<ReactionKind, number>);
+  const commentCount = review.commentCount ?? 0;
 
   return (
     <article className="rounded-md border border-border bg-card p-4">
@@ -49,8 +64,17 @@ export function ReviewCard({ review }: { review: ReviewCardData }) {
             <Link href={`/profile/${review.author.username}`} className="text-sm font-semibold hover:underline">
               {review.author.display_name || review.author.username}
             </Link>
+            {review.author.is_admin && (
+              <Badge variant="default" className="h-4 px-1.5 text-[10px] font-medium">
+                Admin
+              </Badge>
+            )}
             <span className="text-xs text-muted-foreground">
               @{review.author.username} · {formatDate(review.created_at)}
+              {review.updated_at &&
+                new Date(review.updated_at).getTime() - new Date(review.created_at).getTime() > 1000 && (
+                  <span title={`Diedit ${formatDate(review.updated_at)}`}> · diedit</span>
+                )}
             </span>
           </div>
           <StarRating value={review.rating} size="sm" />
@@ -119,6 +143,22 @@ export function ReviewCard({ review }: { review: ReviewCardData }) {
           })}
         </div>
       )}
+
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <ReactionBar
+          reviewId={review.id}
+          initialCounts={counts}
+          initialActive={review.activeReactions ?? []}
+          isLoggedIn={isLoggedIn}
+        />
+        <Link
+          href={`/reviews/${review.id}`}
+          className="ml-auto inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+        >
+          <MessageSquare className="h-3.5 w-3.5" />
+          {commentCount} komentar
+        </Link>
+      </div>
     </article>
   );
 }

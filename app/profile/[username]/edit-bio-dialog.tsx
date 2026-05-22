@@ -22,16 +22,19 @@ export function EditBioDialog({
   initialBio,
   initialDisplayName,
   initialAvatarUrl,
+  initialLocation,
 }: {
   initialBio: string;
   initialDisplayName: string;
   initialAvatarUrl: string | null;
+  initialLocation: string;
 }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [bio, setBio] = useState(initialBio);
   const [displayName, setDisplayName] = useState(initialDisplayName);
+  const [location, setLocation] = useState(initialLocation);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(initialAvatarUrl);
   const [pickedPreview, setPickedPreview] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -43,6 +46,7 @@ export function EditBioDialog({
   function resetLocal() {
     setBio(initialBio);
     setDisplayName(initialDisplayName);
+    setLocation(initialLocation);
     setAvatarUrl(initialAvatarUrl);
     setPickedPreview(null);
     setError(null);
@@ -169,6 +173,19 @@ export function EditBioDialog({
             <p className="text-xs text-muted-foreground">
               Opsional. Username tetap dipakai buat URL profil.
             </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="location">Lokasi</Label>
+            <Input
+              id="location"
+              name="location"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              maxLength={80}
+              placeholder="Misal: Jakarta, Bandung, Yogyakarta"
+            />
+            <p className="text-xs text-muted-foreground">Opsional.</p>
           </div>
 
           <div className="space-y-2">

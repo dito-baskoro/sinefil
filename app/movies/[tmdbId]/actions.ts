@@ -43,6 +43,31 @@ export async function submitReview(input: {
   return {};
 }
 
+export async function deleteReview(reviewId: string): Promise<{ error?: string }> {
+  if (!isSupabaseConfigured()) return { error: "Supabase belum dikonfigurasi." };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Sesi habis. Login ulang." };
+
+  const { data: review } = await supabase
+    .from("reviews")
+    .select("movie_id, user_id, movie:movies!reviews_movie_id_fkey(tmdb_id)")
+    .eq("id", reviewId)
+    .maybeSingle();
+
+  const { error } = await supabase.from("reviews").delete().eq("id", reviewId);
+  if (error) return { error: error.message };
+
+  const movie = review?.movie && (Array.isArray(review.movie) ? review.movie[0] : review.movie);
+  if (movie?.tmdb_id) revalidatePath(`/movies/${movie.tmdb_id}`);
+  revalidatePath("/");
+  revalidatePath("/feed");
+  return {};
+}
+
 export async function toggleWatchlist(input: {
   movieDbId: number;
   desiredStatus: WatchlistStatus | null; // null = remove

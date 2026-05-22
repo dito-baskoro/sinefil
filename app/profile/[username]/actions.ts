@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { isSupabaseConfigured } from "@/lib/env";
+import { resolveTmdbIdsToMovieIds } from "@/lib/picker-actions";
 
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 const ALLOWED_AVATAR_TYPES = ["image/png", "image/jpeg", "image/webp"];
@@ -19,6 +20,10 @@ export async function updateProfile(formData: FormData): Promise<{ error?: strin
   const displayName = displayNameRaw.trim();
   if (displayName.length > 50) return { error: "Nama tampilan maks 50 karakter." };
 
+  const locationRaw = String(formData.get("location") ?? "");
+  const location = locationRaw.trim();
+  if (location.length > 80) return { error: "Lokasi maks 80 karakter." };
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -28,6 +33,7 @@ export async function updateProfile(formData: FormData): Promise<{ error?: strin
   const update: Record<string, unknown> = {
     bio: bio || null,
     display_name: displayName || null,
+    location: location || null,
   };
 
   const avatarFile = formData.get("avatar") as File | null;
@@ -64,6 +70,71 @@ export async function updateProfile(formData: FormData): Promise<{ error?: strin
   if (updateError) return { error: updateError.message };
 
   revalidatePath("/", "layout");
+  return {};
+}
+
+export async function toggleFollow(
+  followeeId: string,
+  username: string,
+): Promise<{ error?: string; following?: boolean }> {
+  if (!isSupabaseConfigured()) return { error: "Supabase belum dikonfigurasi." };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Login dulu buat follow." };
+  if (user.id === followeeId) return { error: "Gak bisa follow diri sendiri." };
+
+  const { data: existing } = await supabase
+    .from("follows")
+    .select("follower_id")
+    .eq("follower_id", user.id)
+    .eq("followee_id", followeeId)
+    .maybeSingle();
+
+  if (existing) {
+    const { error } = await supabase
+      .from("follows")
+      .delete()
+      .eq("follower_id", user.id)
+      .eq("followee_id", followeeId);
+    if (error) return { error: error.message };
+    revalidatePath(`/profile/${username}`);
+    return { following: false };
+  }
+
+  const { error } = await supabase
+    .from("follows")
+    .insert({ follower_id: user.id, followee_id: followeeId });
+  if (error) return { error: error.message };
+  revalidatePath(`/profile/${username}`);
+  return { following: true };
+}
+
+export async function setProfileFavorites(
+  tmdbIds: number[],
+): Promise<{ error?: string }> {
+  if (!isSupabaseConfigured()) return { error: "Supabase belum dikonfigurasi." };
+  if (tmdbIds.length > 4) return { error: "Maks 4 film favorit." };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Sesi habis." };
+
+  const movieIds = await resolveTmdbIdsToMovieIds(tmdbIds);
+
+  const { error } = await supabase.rpc("set_profile_favorites", { p_movie_ids: movieIds });
+  if (error) return { error: error.message };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("username")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (profile?.username) revalidatePath(`/profile/${profile.username}`);
   return {};
 }
 

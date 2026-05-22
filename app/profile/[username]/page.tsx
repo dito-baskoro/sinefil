@@ -9,6 +9,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDate, tmdbImage } from "@/lib/utils";
 import { EditBioDialog } from "./edit-bio-dialog";
+import { EditFavoritesDialog } from "./edit-favorites-dialog";
+import { FollowButton } from "./follow-button";
 import { DefaultAvatar } from "@/components/default-avatar";
 import type { VibeTag } from "@/lib/types";
 
@@ -30,7 +32,7 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, username, display_name, avatar_url, bio, created_at")
+    .select("id, username, display_name, avatar_url, bio, location, is_admin, created_at")
 
     .eq("username", username)
     .maybeSingle();
@@ -52,6 +54,54 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
     .select("id", { count: "exact", head: true })
     .eq("user_id", profile.id)
     .eq("status", "want_to_watch");
+
+  const { count: followerCount } = await supabase
+    .from("follows")
+    .select("follower_id", { count: "exact", head: true })
+    .eq("followee_id", profile.id);
+
+  const { count: followingCount } = await supabase
+    .from("follows")
+    .select("follower_id", { count: "exact", head: true })
+    .eq("follower_id", profile.id);
+
+  let initialFollowing = false;
+  if (user && !isOwner) {
+    const { data: existingFollow } = await supabase
+      .from("follows")
+      .select("follower_id")
+      .eq("follower_id", user.id)
+      .eq("followee_id", profile.id)
+      .maybeSingle();
+    initialFollowing = Boolean(existingFollow);
+  }
+
+  const { data: favoriteRows } = await supabase
+    .from("profile_favorites")
+    .select("position, movie:movies!profile_favorites_movie_id_fkey(id, tmdb_id, title, poster_path, release_date)")
+    .eq("user_id", profile.id)
+    .order("position", { ascending: true });
+
+  const favorites = (favoriteRows ?? [])
+    .map((r) => {
+      const m = Array.isArray(r.movie) ? r.movie[0] : r.movie;
+      return m
+        ? {
+            position: r.position as number,
+            tmdb_id: m.tmdb_id as number,
+            title: m.title as string,
+            poster_path: (m.poster_path as string | null) ?? null,
+            release_date: (m.release_date as string | null) ?? "",
+          }
+        : null;
+    })
+    .filter(Boolean) as {
+    position: number;
+    tmdb_id: number;
+    title: string;
+    poster_path: string | null;
+    release_date: string;
+  }[];
 
   const { data: vibeTags } = await supabase.from("vibe_tags").select("id, slug, label_id, emoji");
   const tagById = new Map(((vibeTags as VibeTag[] | null) ?? []).map((vt) => [vt.id, vt]));
@@ -107,9 +157,41 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
           )}
         </div>
         <div className="flex-1 space-y-1">
-          <h1 className="text-2xl font-bold">{profile.display_name || profile.username}</h1>
+          <h1 className="flex items-center gap-2 text-2xl font-bold">
+            {profile.display_name || profile.username}
+            {profile.is_admin && (
+              <Badge variant="default" className="h-5 px-2 text-[11px] font-medium">
+                Admin
+              </Badge>
+            )}
+          </h1>
           <p className="text-sm text-muted-foreground">@{profile.username}</p>
+          {profile.location && (
+            <p className="text-sm text-muted-foreground">📍 {profile.location}</p>
+          )}
           {profile.bio && <p className="max-w-prose text-sm">{profile.bio}</p>}
+          <div className="flex flex-wrap gap-3 pt-1 text-sm">
+            <Link
+              href={`/profile/${profile.username}/followers`}
+              className="hover:underline"
+            >
+              <strong className="tabular-nums">{followerCount ?? 0}</strong>{" "}
+              <span className="text-muted-foreground">follower</span>
+            </Link>
+            <Link
+              href={`/profile/${profile.username}/following`}
+              className="hover:underline"
+            >
+              <strong className="tabular-nums">{followingCount ?? 0}</strong>{" "}
+              <span className="text-muted-foreground">following</span>
+            </Link>
+            <Link
+              href={`/profile/${profile.username}/lists`}
+              className="inline-flex items-center gap-1 rounded-full border border-input px-2.5 py-0.5 text-xs font-medium hover:bg-secondary"
+            >
+              List film
+            </Link>
+          </div>
           <div className="flex flex-wrap gap-3 pt-1 text-sm">
             <span>
               <strong className="tabular-nums">{reviews.length}</strong>{" "}
@@ -125,12 +207,13 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
             </span>
           </div>
         </div>
-        {isOwner && (
+        {isOwner ? (
           <div className="flex gap-2">
             <EditBioDialog
               initialBio={profile.bio ?? ""}
               initialDisplayName={profile.display_name ?? ""}
               initialAvatarUrl={profile.avatar_url ?? null}
+              initialLocation={profile.location ?? ""}
             />
             <form action="/auth/sign-out" method="post">
               <button className="rounded-md border border-input px-3 py-1.5 text-sm hover:bg-secondary">
@@ -138,8 +221,68 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
               </button>
             </form>
           </div>
+        ) : (
+          <FollowButton
+            followeeId={profile.id}
+            username={profile.username}
+            initialFollowing={initialFollowing}
+            isLoggedIn={Boolean(user)}
+          />
         )}
       </header>
+
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold">Film favorit</h2>
+          {isOwner && (
+            <EditFavoritesDialog
+              initialFavorites={favorites.map((f) => ({
+                tmdb_id: f.tmdb_id,
+                title: f.title,
+                poster_path: f.poster_path,
+                release_date: f.release_date,
+              }))}
+            />
+          )}
+        </div>
+        <div className="grid max-w-md grid-cols-4 gap-2">
+          {Array.from({ length: 4 }).map((_, i) => {
+            const fav = favorites[i];
+            if (fav) {
+              const poster = tmdbImage(fav.poster_path, "w185");
+              return (
+                <Link
+                  key={`fav-${i}`}
+                  href={`/movies/${fav.tmdb_id}`}
+                  className="group relative aspect-[2/3] overflow-hidden rounded-md border border-border bg-secondary"
+                >
+                  {poster ? (
+                    <Image
+                      src={poster}
+                      alt={fav.title}
+                      fill
+                      sizes="110px"
+                      className="object-cover transition-transform group-hover:scale-[1.02]"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center p-2 text-center text-[10px]">
+                      {fav.title}
+                    </div>
+                  )}
+                </Link>
+              );
+            }
+            return (
+              <div
+                key={`fav-empty-${i}`}
+                className="flex aspect-[2/3] items-center justify-center rounded-md border border-dashed border-border bg-secondary/40 text-center text-[10px] text-muted-foreground"
+              >
+                {isOwner ? "+ Tambah" : "—"}
+              </div>
+            );
+          })}
+        </div>
+      </section>
 
       <section className="space-y-3">
         <h2 className="text-xl font-semibold">Review terbaru</h2>
@@ -189,6 +332,12 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
                           ))}
                         </div>
                       )}
+                      <Link
+                        href={`/reviews/${r.id}`}
+                        className="inline-block text-xs text-muted-foreground hover:underline"
+                      >
+                        Reaksi & komentar →
+                      </Link>
                     </div>
                   </CardContent>
                 </Card>

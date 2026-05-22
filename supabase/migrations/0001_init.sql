@@ -11,6 +11,8 @@ create table public.profiles (
   display_name    text,
   avatar_url      text,
   bio             text,
+  location        text check (char_length(location) <= 80),
+  is_admin        boolean not null default false,
   created_at      timestamptz not null default now()
 );
 
@@ -109,6 +111,15 @@ create policy "user updates own review" on public.reviews
 create policy "user deletes own review" on public.reviews
   for delete using (auth.uid() = user_id);
 
+create policy "admin deletes any review" on public.reviews
+  for delete
+  using (
+    exists (
+      select 1 from public.profiles p
+      where p.id = auth.uid() and p.is_admin = true
+    )
+  );
+
 create or replace function public.touch_updated_at()
 returns trigger language plpgsql as $$
 begin
@@ -157,8 +168,7 @@ create table public.family_metrics (
   review_id                       uuid not null references public.reviews(id) on delete cascade,
   family_safe                     int check (family_safe between 1 and 5),
   awkward_scene_meter             int check (awkward_scene_meter between 1 and 5),
-  bapak_ketiduran_probability     int check (bapak_ketiduran_probability between 1 and 5),
-  ibu_bakal_komentar_terus        int check (ibu_bakal_komentar_terus between 1 and 5),
+  ketiduran_probability           int check (ketiduran_probability between 1 and 5),
   nangis_meter                    int check (nangis_meter between 1 and 5),
   unique (review_id)
 );
@@ -264,14 +274,12 @@ begin
   delete from public.family_metrics where review_id = v_review_id;
   if p_family is not null and p_family <> 'null'::jsonb then
     insert into public.family_metrics (
-      review_id, family_safe, awkward_scene_meter, bapak_ketiduran_probability,
-      ibu_bakal_komentar_terus, nangis_meter
+      review_id, family_safe, awkward_scene_meter, ketiduran_probability, nangis_meter
     ) values (
       v_review_id,
       nullif((p_family->>'family_safe'), '')::int,
       nullif((p_family->>'awkward_scene_meter'), '')::int,
-      nullif((p_family->>'bapak_ketiduran_probability'), '')::int,
-      nullif((p_family->>'ibu_bakal_komentar_terus'), '')::int,
+      nullif((p_family->>'ketiduran_probability'), '')::int,
       nullif((p_family->>'nangis_meter'), '')::int
     );
   end if;

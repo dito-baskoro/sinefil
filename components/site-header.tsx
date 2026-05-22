@@ -4,6 +4,7 @@ import { Film, LogIn, Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
 import { DefaultAvatar } from "@/components/default-avatar";
+import { HeaderMenu } from "@/components/header-menu";
 
 export async function SiteHeader() {
   let isLoggedIn = false;
@@ -34,6 +35,17 @@ export async function SiteHeader() {
           <Film className="h-5 w-5 text-primary" />
           <span className="text-lg">Sinefil</span>
         </Link>
+
+        <nav className="hidden items-center gap-4 text-sm text-muted-foreground sm:flex">
+          {isLoggedIn && (
+            <Link href="/feed" className="hover:text-foreground">
+              Aktivitas
+            </Link>
+          )}
+          <Link href="/lists" className="hover:text-foreground">
+            List
+          </Link>
+        </nav>
 
         <form action="/movies" className="ml-auto flex max-w-sm flex-1 items-center">
           <label className="flex w-full items-center gap-2 rounded-md border border-input bg-background px-3 py-1.5 text-sm focus-within:ring-2 focus-within:ring-ring">
@@ -79,6 +91,8 @@ export async function SiteHeader() {
             Masuk
           </Link>
         )}
+
+        <HeaderMenu isLoggedIn={isLoggedIn} />
       </div>
     </header>
   );

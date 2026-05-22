@@ -4,7 +4,7 @@
 
 ## Apa yang Sinefil bikin beda
 
-- **Aman Ditonton Bareng Keluarga?** — lima slider: Family Safe, Awkward Scene Meter, Bapak Ketiduran Probability, Ibu Bakal Komentar Terus, Nangis Meter.
+- **Aman Ditonton Bareng Keluarga?** — empat slider: Family Safe, Awkward Scene Meter, Ketiduran Probability, Nangis Meter.
 - **Vibe tags** — film hujan-hujan, film anak kos, film buat move on, film absurd, film tongkrongan.
 - **Spoiler-blur** built in.
 - **Cuma film Indonesia** (TMDB `original_language=id`).

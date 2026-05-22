@@ -57,8 +57,7 @@ Build a social platform focused exclusively on Indonesian films and Indonesian m
 Community metrics:
 - Family Safe
 - Awkward Scene Meter
-- Bapak Ketiduran Probability
-- Ibu Bakal Komentar Terus
+- Ketiduran Probability
 - Nangis Meter
 
 ### Vibe Tags

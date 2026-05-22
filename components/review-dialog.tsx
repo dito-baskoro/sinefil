@@ -25,12 +25,16 @@ export function ReviewDialog({
   movieTitle,
   vibeTags,
   triggerLabel = "Tulis Review",
+  triggerSize,
+  triggerVariant,
   initial,
 }: {
   movieDbId: number;
   movieTitle: string;
   vibeTags: VibeTag[];
   triggerLabel?: string;
+  triggerSize?: "default" | "sm" | "lg" | "icon";
+  triggerVariant?: "default" | "outline" | "ghost" | "secondary" | "destructive" | "link";
   initial?: {
     rating: number;
     reviewText: string | null;
@@ -52,7 +56,7 @@ export function ReviewDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>{triggerLabel}</Button>
+        <Button size={triggerSize} variant={triggerVariant}>{triggerLabel}</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
