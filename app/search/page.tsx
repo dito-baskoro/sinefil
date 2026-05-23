@@ -18,6 +18,7 @@ type UserHit = {
   avatar_url: string | null;
   bio: string | null;
   is_admin: boolean | null;
+  is_banned: boolean | null;
 };
 
 async function searchUsers(query: string): Promise<UserHit[]> {
@@ -27,7 +28,7 @@ async function searchUsers(query: string): Promise<UserHit[]> {
   const pattern = `%${escaped}%`;
   const { data } = await supabase
     .from("profiles")
-    .select("id, username, display_name, avatar_url, bio, is_admin")
+    .select("id, username, display_name, avatar_url, bio, is_admin, is_banned")
     .or(`username.ilike.${pattern},display_name.ilike.${pattern}`)
     .limit(20);
   return (data ?? []) as UserHit[];
@@ -105,6 +106,11 @@ export default async function SearchPage({
                         {u.is_admin && (
                           <Badge variant="default" className="h-4 shrink-0 px-1.5 text-[10px] font-medium">
                             Admin
+                          </Badge>
+                        )}
+                        {u.is_banned && (
+                          <Badge variant="destructive" className="h-4 shrink-0 px-1.5 text-[10px] font-medium">
+                            Banned
                           </Badge>
                         )}
                       </div>

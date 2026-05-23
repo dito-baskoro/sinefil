@@ -32,7 +32,7 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, username, display_name, avatar_url, bio, location, is_admin, created_at")
+    .select("id, username, display_name, avatar_url, bio, location, is_admin, is_banned, created_at")
 
     .eq("username", username)
     .maybeSingle();
@@ -173,6 +173,11 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
             {profile.is_admin && (
               <Badge variant="default" className="h-5 px-2 text-[11px] font-medium">
                 Admin
+              </Badge>
+            )}
+            {profile.is_banned && (
+              <Badge variant="destructive" className="h-5 px-2 text-[11px] font-medium">
+                Banned
               </Badge>
             )}
           </h1>

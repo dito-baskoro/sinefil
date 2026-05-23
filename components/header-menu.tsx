@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Menu } from "lucide-react";
 
-export function HeaderMenu({ isLoggedIn }: { isLoggedIn: boolean }) {
+export function HeaderMenu({ isLoggedIn, isAdmin }: { isLoggedIn: boolean; isAdmin?: boolean }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -61,6 +61,17 @@ export function HeaderMenu({ isLoggedIn }: { isLoggedIn: boolean }) {
                 List
               </Link>
             </li>
+            {isAdmin && (
+              <li>
+                <Link
+                  href="/admin/users"
+                  className="block px-3 py-2 hover:bg-secondary"
+                  onClick={() => setOpen(false)}
+                >
+                  Users
+                </Link>
+              </li>
+            )}
             {isLoggedIn && (
               <li>
                 <form action="/auth/sign-out" method="post">

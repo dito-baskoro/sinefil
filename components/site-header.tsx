@@ -10,6 +10,7 @@ export async function SiteHeader() {
   let isLoggedIn = false;
   let username: string | null = null;
   let avatarUrl: string | null = null;
+  let isAdmin = false;
 
   if (isSupabaseConfigured()) {
     const supabase = await createClient();
@@ -20,11 +21,12 @@ export async function SiteHeader() {
       isLoggedIn = true;
       const { data: profile } = await supabase
         .from("profiles")
-        .select("username, avatar_url")
+        .select("username, avatar_url, is_admin")
         .eq("id", user.id)
         .maybeSingle();
       username = profile?.username ?? null;
       avatarUrl = profile?.avatar_url ?? null;
+      isAdmin = Boolean(profile?.is_admin);
     }
   }
 
@@ -45,6 +47,11 @@ export async function SiteHeader() {
           <Link href="/lists" className="hover:text-foreground">
             List
           </Link>
+          {isAdmin && (
+            <Link href="/admin/users" className="hover:text-foreground">
+              Users
+            </Link>
+          )}
         </nav>
 
         <form action="/search" className="ml-auto flex max-w-sm flex-1 items-center">
@@ -92,7 +99,7 @@ export async function SiteHeader() {
           </Link>
         )}
 
-        <HeaderMenu isLoggedIn={isLoggedIn} />
+        <HeaderMenu isLoggedIn={isLoggedIn} isAdmin={isAdmin} />
       </div>
     </header>
   );

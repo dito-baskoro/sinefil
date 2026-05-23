@@ -19,7 +19,7 @@ export type ReviewCardData = {
   contains_spoiler: boolean;
   created_at: string;
   updated_at?: string | null;
-  author: { username: string; avatar_url: string | null; display_name: string | null; is_admin?: boolean };
+  author: { username: string; avatar_url: string | null; display_name: string | null; is_admin?: boolean; is_banned?: boolean };
   family: FamilyMetrics | null;
   vibeTags: VibeTag[];
   reactionCounts?: Record<ReactionKind, number>;
@@ -67,6 +67,11 @@ export function ReviewCard({
             {review.author.is_admin && (
               <Badge variant="default" className="h-4 px-1.5 text-[10px] font-medium">
                 Admin
+              </Badge>
+            )}
+            {review.author.is_banned && (
+              <Badge variant="destructive" className="h-4 px-1.5 text-[10px] font-medium">
+                Banned
               </Badge>
             )}
             <span className="text-xs text-muted-foreground">

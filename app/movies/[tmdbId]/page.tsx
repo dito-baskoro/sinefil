@@ -83,7 +83,7 @@ export default async function MovieDetailPage({ params }: { params: Promise<Para
         .from("reviews")
         .select(
           `id, rating, review_text, contains_spoiler, created_at, updated_at, user_id,
-           author:profiles!reviews_user_id_fkey(username, avatar_url, display_name, is_admin),
+           author:profiles!reviews_user_id_fkey(username, avatar_url, display_name, is_admin, is_banned),
            family_metrics(*),
            review_vibe_tags(vibe_tag_id)`
         )
@@ -100,7 +100,7 @@ export default async function MovieDetailPage({ params }: { params: Promise<Para
         created_at: string;
         updated_at: string | null;
         user_id: string;
-        author: { username: string; avatar_url: string | null; display_name: string | null; is_admin: boolean } | { username: string; avatar_url: string | null; display_name: string | null; is_admin: boolean }[] | null;
+        author: { username: string; avatar_url: string | null; display_name: string | null; is_admin: boolean; is_banned: boolean } | { username: string; avatar_url: string | null; display_name: string | null; is_admin: boolean; is_banned: boolean }[] | null;
         family_metrics: FamilyMetrics | FamilyMetrics[] | null;
         review_vibe_tags: { vibe_tag_id: number }[] | null;
       }) => {
@@ -113,7 +113,7 @@ export default async function MovieDetailPage({ params }: { params: Promise<Para
           contains_spoiler: r.contains_spoiler,
           created_at: r.created_at,
           updated_at: r.updated_at,
-          author: author ?? { username: "?", avatar_url: null, display_name: null, is_admin: false },
+          author: author ?? { username: "?", avatar_url: null, display_name: null, is_admin: false, is_banned: false },
           family: fam ?? null,
           vibeTags: (r.review_vibe_tags ?? [])
             .map((rvt) => tagById.get(rvt.vibe_tag_id))

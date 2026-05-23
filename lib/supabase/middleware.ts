@@ -2,8 +2,8 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 /**
- * Refresh the Supabase auth session on every request. Returns the response
- * (with refreshed cookies) so middleware.ts can return it to the client.
+ * Refresh the Supabase auth session on every request. If the signed-in user
+ * is banned, sign them out and redirect to /banned.
  */
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -31,7 +31,26 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    const path = request.nextUrl.pathname;
+    const isBanRoute = path === "/banned";
+    const isAuthRoute = path.startsWith("/auth/");
+    if (!isBanRoute && !isAuthRoute) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("is_banned")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (profile?.is_banned) {
+        await supabase.auth.signOut();
+        return NextResponse.redirect(new URL("/banned", request.url));
+      }
+    }
+  }
 
   return supabaseResponse;
 }

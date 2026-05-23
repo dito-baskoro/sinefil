@@ -48,7 +48,7 @@ export default async function ReviewDetailPage({ params }: { params: Promise<Par
     .from("reviews")
     .select(
       `id, rating, review_text, contains_spoiler, created_at, updated_at, user_id, movie_id,
-       author:profiles!reviews_user_id_fkey(id, username, display_name, avatar_url, is_admin),
+       author:profiles!reviews_user_id_fkey(id, username, display_name, avatar_url, is_admin, is_banned),
        movie:movies!reviews_movie_id_fkey(id, tmdb_id, title, poster_path, release_date),
        family_metrics(*),
        review_vibe_tags(vibe_tag_id)`
@@ -169,14 +169,19 @@ export default async function ReviewDetailPage({ params }: { params: Promise<Par
               )}
             </div>
             <div>
-              <p className="flex items-center gap-1.5 text-sm font-semibold">
+              <div className="flex items-center gap-1.5 text-sm font-semibold">
                 {author.display_name || author.username}
                 {author.is_admin && (
                   <Badge variant="default" className="h-4 px-1.5 text-[10px] font-medium">
                     Admin
                   </Badge>
                 )}
-              </p>
+                {author.is_banned && (
+                  <Badge variant="destructive" className="h-4 px-1.5 text-[10px] font-medium">
+                    Banned
+                  </Badge>
+                )}
+              </div>
               <p className="text-xs text-muted-foreground">
                 @{author.username} · {formatDate(review.created_at)}
                 {review.updated_at &&
