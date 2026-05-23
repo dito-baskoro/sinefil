@@ -27,12 +27,17 @@ export async function submitReview(input: {
   } = await supabase.auth.getUser();
   if (!user) return { error: "Sesi habis. Login ulang." };
 
+  const cleanFamily: FamilyMetricsValue = {};
+  for (const [k, v] of Object.entries(family) as [keyof FamilyMetricsValue, number | undefined][]) {
+    if (typeof v === "number" && v >= 1 && v <= 5) cleanFamily[k] = v;
+  }
+
   const { error } = await supabase.rpc("upsert_review", {
     p_movie_id: movieDbId,
     p_rating: rating,
     p_review_text: reviewText ?? null,
     p_contains_spoiler: containsSpoiler,
-    p_family: Object.keys(family).length ? family : null,
+    p_family: Object.keys(cleanFamily).length ? cleanFamily : null,
     p_vibe_tag_ids: vibeTagIds,
   });
 
