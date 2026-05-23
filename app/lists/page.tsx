@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { formatDate, tmdbImage } from "@/lib/utils";
 
 export const metadata = { title: "List film" };
@@ -17,19 +18,33 @@ type ListRow = {
   list_items: { movie: { poster_path: string | null } | { poster_path: string | null }[] | null }[] | null;
 };
 
-export default async function ListsIndex() {
+export default async function ListsIndex({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
   if (!isSupabaseConfigured()) {
     return <p className="text-sm text-muted-foreground">Supabase belum dikonfigurasi.</p>;
   }
+  const { q = "" } = await searchParams;
+  const query = q.trim();
   const supabase = await createClient();
-  const { data: lists } = await supabase
+  let listsQuery = supabase
     .from("lists")
     .select(
       `id, title, description, created_at, user_id,
        profile:profiles!lists_user_id_fkey(username, display_name),
        list_items(movie:movies!list_items_movie_id_fkey(poster_path))`
     )
-    .eq("is_public", true)
+    .eq("is_public", true);
+
+  if (query) {
+    const escaped = query.replace(/[%_,]/g, (c) => `\\${c}`);
+    const pattern = `%${escaped}%`;
+    listsQuery = listsQuery.or(`title.ilike.${pattern},description.ilike.${pattern}`);
+  }
+
+  const { data: lists } = await listsQuery
     .order("created_at", { ascending: false })
     .limit(40);
 
@@ -44,9 +59,23 @@ export default async function ListsIndex() {
         </Button>
       </header>
 
+      <form action="/lists" className="flex max-w-xl gap-2">
+        <Input
+          name="q"
+          defaultValue={query}
+          placeholder="Cari list..."
+          aria-label="Cari list"
+        />
+        <Button type="submit" variant="secondary">Cari</Button>
+      </form>
+
       {rows.length === 0 ? (
         <div className="rounded-md border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-          Belum ada list publik. Jadi yang pertama bikin!
+          {query ? (
+            <>Tidak ada list yang cocok dengan &quot;{query}&quot;.</>
+          ) : (
+            <>Belum ada list publik. Jadi yang pertama bikin!</>
+          )}
         </div>
       ) : (
         <ul className="space-y-4">
