@@ -1,6 +1,6 @@
 # Sinefil 🇮🇩🍿
 
-**Platform film Indonesia.**
+**Platform review film Indonesia.**
 
 ## Apa yang Sinefil bikin beda
 

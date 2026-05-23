@@ -16,7 +16,7 @@ export default async function HomePage() {
     <div className="space-y-12">
       <section className="space-y-3">
         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-          Platform film Indonesia
+          Platform review film Indonesia
         </h1>
         <p className="max-w-2xl text-base text-muted-foreground">
           Catat film yang udah ditonton, kasih bintang, baca review penonton lain.

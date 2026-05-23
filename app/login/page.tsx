@@ -29,7 +29,7 @@ export default async function LoginPage({
         <CardHeader>
           <CardTitle className="text-2xl">Masuk ke Sinefil</CardTitle>
           <CardDescription>
-            Platform film Indonesia. Login sekali, langsung review.
+            Platform review film Indonesia. Login dan langsung review.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
