@@ -47,15 +47,15 @@ export async function SiteHeader() {
           </Link>
         </nav>
 
-        <form action="/movies" className="ml-auto flex max-w-sm flex-1 items-center">
+        <form action="/search" className="ml-auto flex max-w-sm flex-1 items-center">
           <label className="flex w-full items-center gap-2 rounded-md border border-input bg-background px-3 py-1.5 text-sm focus-within:ring-2 focus-within:ring-ring">
             <Search className="h-4 w-4 text-muted-foreground" aria-hidden />
             <input
               type="search"
               name="q"
-              placeholder="Cari film Indonesia..."
+              placeholder="Cari film atau pengguna..."
               className="w-full bg-transparent outline-none placeholder:text-muted-foreground"
-              aria-label="Cari film"
+              aria-label="Cari film atau pengguna"
             />
           </label>
         </form>
