@@ -43,38 +43,47 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
   } = await supabase.auth.getUser();
   const isOwner = user?.id === profile.id;
 
-  const { count: watchedCount } = await supabase
-    .from("watchlist")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", profile.id)
-    .eq("status", "watched");
-
-  const { count: wantCount } = await supabase
-    .from("watchlist")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", profile.id)
-    .eq("status", "want_to_watch");
-
-  const { count: followerCount } = await supabase
-    .from("follows")
-    .select("follower_id", { count: "exact", head: true })
-    .eq("followee_id", profile.id);
-
-  const { count: followingCount } = await supabase
-    .from("follows")
-    .select("follower_id", { count: "exact", head: true })
-    .eq("follower_id", profile.id);
-
-  const { count: listCount } = await supabase
-    .from("lists")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", profile.id)
-    .eq("is_public", true);
-
-  const { count: bookmarkCount } = await supabase
-    .from("list_bookmarks")
-    .select("list_id", { count: "exact", head: true })
-    .eq("user_id", profile.id);
+  const [
+    { count: watchedCount },
+    { count: wantCount },
+    { count: followerCount },
+    { count: followingCount },
+    { count: listCount },
+    { count: bookmarkCount },
+    { count: reviewCount },
+  ] = await Promise.all([
+    supabase
+      .from("watchlist")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", profile.id)
+      .eq("status", "watched"),
+    supabase
+      .from("watchlist")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", profile.id)
+      .eq("status", "want_to_watch"),
+    supabase
+      .from("follows")
+      .select("follower_id", { count: "exact", head: true })
+      .eq("followee_id", profile.id),
+    supabase
+      .from("follows")
+      .select("follower_id", { count: "exact", head: true })
+      .eq("follower_id", profile.id),
+    supabase
+      .from("lists")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", profile.id)
+      .eq("is_public", true),
+    supabase
+      .from("list_bookmarks")
+      .select("list_id", { count: "exact", head: true })
+      .eq("user_id", profile.id),
+    supabase
+      .from("reviews")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", profile.id),
+  ]);
 
   let initialFollowing = false;
   if (user && !isOwner) {
@@ -89,7 +98,9 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
 
   const { data: favoriteRows } = await supabase
     .from("profile_favorites")
-    .select("position, movie:movies!profile_favorites_movie_id_fkey(id, tmdb_id, title, poster_path, release_date)")
+    .select(
+      "position, movie:movies!profile_favorites_movie_id_fkey(id, tmdb_id, title, poster_path, backdrop_path, release_date)"
+    )
     .eq("user_id", profile.id)
     .order("position", { ascending: true });
 
@@ -102,6 +113,7 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
             tmdb_id: m.tmdb_id as number,
             title: m.title as string,
             poster_path: (m.poster_path as string | null) ?? null,
+            backdrop_path: (m.backdrop_path as string | null) ?? null,
             release_date: (m.release_date as string | null) ?? "",
           }
         : null;
@@ -111,6 +123,7 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
     tmdb_id: number;
     title: string;
     poster_path: string | null;
+    backdrop_path: string | null;
     release_date: string;
   }[];
 
@@ -150,73 +163,90 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
     };
   });
 
+  const profileBackdrop = tmdbImage(favorites[0]?.backdrop_path ?? favorites[0]?.poster_path, "w780");
+
   return (
-    <div className="space-y-8">
-      <header className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-        <div className="h-24 w-24 overflow-hidden rounded-full border border-[rgb(102,119,136)]">
-          {profile.avatar_url ? (
+    <div className="space-y-8 sm:-mt-8">
+      <header
+        className={`relative flex flex-col items-start gap-4 overflow-hidden p-0 sm:flex-row sm:items-end sm:p-8 ${
+          profileBackdrop ? "sm:h-[500px]" : ""
+        }`}
+      >
+        {profileBackdrop && (
+          <>
             <Image
-              src={profile.avatar_url}
+              src={profileBackdrop}
               alt=""
-              width={96}
-              height={96}
-              className="h-full w-full object-cover"
-              unoptimized
+              fill
+              priority
+              sizes="100vw"
+              className="hidden object-cover sm:block"
             />
-          ) : (
-            <DefaultAvatar />
-          )}
+            <div className="absolute inset-0 hidden bg-gradient-to-r from-background via-background/80 to-background/25 sm:block" />
+            <div className="absolute inset-x-0 bottom-0 hidden h-56 bg-gradient-to-t from-background via-background/85 to-transparent sm:block" />
+          </>
+        )}
+        <div className="flex w-full items-center gap-4 sm:w-auto">
+          <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-full border border-[rgb(102,119,136)] bg-background">
+            {profile.avatar_url ? (
+              <Image
+                src={profile.avatar_url}
+                alt=""
+                width={96}
+                height={96}
+                className="h-full w-full object-cover"
+                unoptimized
+              />
+            ) : (
+              <DefaultAvatar />
+            )}
+          </div>
+          <ProfileStats
+            username={profile.username}
+            films={watchedCount ?? 0}
+            reviews={reviewCount ?? 0}
+            lists={listCount ?? 0}
+            following={followingCount ?? 0}
+            followers={followerCount ?? 0}
+            className="flex-1 sm:hidden"
+            compact
+          />
         </div>
-        <div className="flex-1 space-y-1">
-          <h1 className="flex items-center gap-2 text-2xl font-bold">
-            {profile.display_name || profile.username}
-            {profile.is_admin && (
-              <Badge variant="default" className="h-5 px-2 text-[11px] font-medium">
-                Admin
-              </Badge>
-            )}
-            {profile.is_banned && (
-              <Badge variant="destructive" className="h-5 px-2 text-[11px] font-medium">
-                Banned
-              </Badge>
-            )}
-          </h1>
-          <p className="text-sm text-muted-foreground">@{profile.username}</p>
-          {profile.location && (
-            <p className="text-sm text-muted-foreground">📍 {profile.location}</p>
-          )}
-          {profile.bio && <p className="max-w-prose text-sm">{profile.bio}</p>}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1 text-sm">
-            <Link
-              href={`/profile/${profile.username}/followers`}
-              className="hover:underline"
-            >
-              <strong className="tabular-nums">{followerCount ?? 0}</strong>{" "}
-              <span className="text-muted-foreground">follower</span>
-            </Link>
-            <Link
-              href={`/profile/${profile.username}/following`}
-              className="hover:underline"
-            >
-              <strong className="tabular-nums">{followingCount ?? 0}</strong>{" "}
-              <span className="text-muted-foreground">following</span>
-            </Link>
-            <Link
-              href={`/profile/${profile.username}/lists`}
-              className="inline-flex items-center gap-1 rounded-full border border-input px-2.5 py-0.5 text-xs font-medium hover:bg-secondary"
-            >
-              List film <span className="tabular-nums text-muted-foreground">{listCount ?? 0}</span>
-            </Link>
-            <Link
-              href={`/profile/${profile.username}/bookmarks`}
-              className="inline-flex items-center gap-1 rounded-full border border-input px-2.5 py-0.5 text-xs font-medium hover:bg-secondary"
-            >
-              List tersimpan <span className="tabular-nums text-muted-foreground">{bookmarkCount ?? 0}</span>
-            </Link>
+        <div className="relative flex-1">
+          <div className="flex w-full flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-x-5 sm:gap-y-2">
+            <div className="space-y-1">
+              <h1 className="flex items-center gap-2 text-2xl font-bold">
+                {profile.display_name || profile.username}
+                {profile.is_admin && (
+                  <Badge variant="default" className="h-5 px-2 text-[11px] font-medium">
+                    Admin
+                  </Badge>
+                )}
+                {profile.is_banned && (
+                  <Badge variant="destructive" className="h-5 px-2 text-[11px] font-medium">
+                    Banned
+                  </Badge>
+                )}
+              </h1>
+              <p className="text-sm text-muted-foreground">@{profile.username}</p>
+              {profile.location && (
+                <p className="text-sm text-muted-foreground">📍 {profile.location}</p>
+              )}
+              {profile.bio && <p className="max-w-prose text-sm">{profile.bio}</p>}
+            </div>
+            <ProfileStats
+              username={profile.username}
+              films={watchedCount ?? 0}
+              reviews={reviewCount ?? 0}
+              lists={listCount ?? 0}
+              following={followingCount ?? 0}
+              followers={followerCount ?? 0}
+              className="hidden sm:flex"
+            />
           </div>
         </div>
         {isOwner ? (
-          <div className="flex gap-2">
+          <div className="relative flex gap-2">
             <EditBioDialog
               initialBio={profile.bio ?? ""}
               initialDisplayName={profile.display_name ?? ""}
@@ -224,20 +254,38 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
               initialLocation={profile.location ?? ""}
             />
             <form action="/auth/sign-out" method="post">
-              <button className="rounded-md border border-input px-3 py-1.5 text-sm hover:bg-secondary">
+              <button className="rounded-md border border-input px-3 py-1.5 text-sm hover:bg-secondary sm:border-black sm:bg-black sm:text-white sm:hover:bg-black/80">
                 Keluar
               </button>
             </form>
           </div>
         ) : (
-          <FollowButton
-            followeeId={profile.id}
-            username={profile.username}
-            initialFollowing={initialFollowing}
-            isLoggedIn={Boolean(user)}
-          />
+          <div className="relative">
+            <FollowButton
+              followeeId={profile.id}
+              username={profile.username}
+              initialFollowing={initialFollowing}
+              isLoggedIn={Boolean(user)}
+            />
+          </div>
         )}
       </header>
+
+      {isOwner && (
+        <div className="flex flex-wrap gap-2 text-xs">
+          <Link
+            href={`/profile/${profile.username}/bookmarks`}
+            className="inline-flex items-center gap-1.5 rounded-full border border-input px-2.5 py-1 font-medium hover:bg-secondary"
+          >
+            <span className="text-muted-foreground">List tersimpan</span>
+            <span className="tabular-nums">{bookmarkCount ?? 0}</span>
+          </Link>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-input px-2.5 py-1 font-medium">
+            <span className="text-muted-foreground">Mau nonton</span>
+            <span className="tabular-nums">{wantCount ?? 0}</span>
+          </span>
+        </div>
+      )}
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">
@@ -290,24 +338,20 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
             );
           })}
         </div>
-        <div className="flex max-w-md flex-wrap items-center gap-x-4 gap-y-1 rounded-md border border-border bg-secondary/40 px-3 py-1.5 text-sm">
-          <span>
-            <strong className="tabular-nums">{reviews.length}</strong>{" "}
-            <span className="text-muted-foreground">review</span>
-          </span>
-          <span>
-            <strong className="tabular-nums">{watchedCount ?? 0}</strong>{" "}
-            <span className="text-muted-foreground">ditonton</span>
-          </span>
-          <span>
-            <strong className="tabular-nums">{wantCount ?? 0}</strong>{" "}
-            <span className="text-muted-foreground">mau nonton</span>
-          </span>
-        </div>
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-xl font-semibold">Review terbaru</h2>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-xl font-semibold">Review terbaru</h2>
+          {reviews.length > 0 && (
+            <Link
+              href={`/profile/${profile.username}/reviews`}
+              className="text-sm font-medium text-muted-foreground hover:text-foreground"
+            >
+              See all reviews
+            </Link>
+          )}
+        </div>
         {reviews.length === 0 ? (
           <div className="rounded-md border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
             Belum ada review.
@@ -369,5 +413,74 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
         )}
       </section>
     </div>
+  );
+}
+
+const NUM = new Intl.NumberFormat("id-ID");
+
+function ProfileStats({
+  username,
+  films,
+  reviews,
+  lists,
+  following,
+  followers,
+  className = "",
+  compact = false,
+}: {
+  username: string;
+  films: number;
+  reviews: number;
+  lists: number;
+  following: number;
+  followers: number;
+  className?: string;
+  compact?: boolean;
+}) {
+  const items: Array<{ label: string; value: number; href: string | null }> = [
+    { label: "Films", value: films, href: null },
+    { label: "Reviews", value: reviews, href: `/profile/${username}/reviews` },
+    { label: "Lists", value: lists, href: `/profile/${username}/lists` },
+    { label: "Following", value: following, href: `/profile/${username}/following` },
+    { label: "Followers", value: followers, href: `/profile/${username}/followers` },
+  ];
+
+  const itemBaseClasses =
+    "group flex flex-col items-center px-1.5 sm:min-w-[5.75rem] sm:px-4 sm:first:pl-0 sm:last:pr-0";
+
+  return (
+    <dl className={`grid w-full grid-cols-3 gap-y-3 py-1 sm:w-auto sm:max-w-full sm:overflow-x-auto sm:[scrollbar-width:none] ${className}`}>
+      {items.map((it, index) => {
+        const itemClasses = [
+          itemBaseClasses,
+          index % 3 === 0 ? "border-l-0" : "border-l border-[#26313b]",
+          index === 0 ? "sm:border-l-0" : "sm:border-l sm:border-[#26313b]",
+        ].join(" ");
+        const inner = (
+          <>
+            <dd className={`${compact ? "text-[1.45rem]" : "text-[1.85rem]"} font-extrabold leading-none tabular-nums text-[#dbe3eb] transition-colors group-hover:text-foreground sm:text-[2.35rem]`}>
+              {NUM.format(it.value)}
+            </dd>
+            <dt className={`${compact ? "mt-1.5 text-[0.54rem] tracking-[0.11em]" : "mt-2 text-[0.62rem] tracking-[0.14em]"} text-center font-medium uppercase leading-none text-[#84909f] sm:text-[0.68rem] sm:tracking-[0.16em]`}>
+              {it.label}
+            </dt>
+          </>
+        );
+
+        return it.href ? (
+          <Link
+            key={it.label}
+            href={it.href}
+            className={`${itemClasses} rounded-sm transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background`}
+          >
+            {inner}
+          </Link>
+        ) : (
+          <div key={it.label} className={itemClasses}>
+            {inner}
+          </div>
+        );
+      })}
+    </dl>
   );
 }

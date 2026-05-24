@@ -31,14 +31,14 @@ export default async function FollowersPage({ params }: { params: Promise<Params
 
   const { data: rows } = await supabase
     .from("follows")
-    .select("follower:profiles!follows_follower_id_fkey(id, username, display_name, avatar_url, bio)")
+    .select("follower:profiles!follows_follower_id_fkey(id, username, display_name, avatar_url, bio, location)")
     .eq("followee_id", profile.id)
     .order("created_at", { ascending: false })
     .limit(200);
 
   const followers = (rows ?? [])
     .map((r) => (Array.isArray(r.follower) ? r.follower[0] : r.follower))
-    .filter(Boolean) as { id: string; username: string; display_name: string | null; avatar_url: string | null; bio: string | null }[];
+    .filter(Boolean) as { id: string; username: string; display_name: string | null; avatar_url: string | null; bio: string | null; location: string | null }[];
 
   return (
     <div className="space-y-6">
@@ -77,11 +77,21 @@ export default async function FollowersPage({ params }: { params: Promise<Params
                     <DefaultAvatar />
                   )}
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">
                     {p.display_name || p.username}
                   </p>
-                  <p className="truncate text-xs text-muted-foreground">@{p.username}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    @{p.username}
+                    {p.location && (
+                      <span className="ml-1.5">· 📍 {p.location}</span>
+                    )}
+                  </p>
+                  {p.bio && (
+                    <p className="mt-1 line-clamp-2 text-xs text-muted-foreground/90">
+                      {p.bio}
+                    </p>
+                  )}
                 </div>
               </Link>
             </li>

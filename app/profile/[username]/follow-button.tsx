@@ -47,7 +47,7 @@ export function FollowButton({
         })
       }
     >
-      {following ? "Mengikuti" : "Follow"}
+      {following ? "Unfollow" : "Follow"}
     </Button>
   );
 }

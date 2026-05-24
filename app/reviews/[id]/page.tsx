@@ -248,7 +248,7 @@ export default async function ReviewDetailPage({ params }: { params: Promise<Par
             <StarRating value={Number(review.rating)} />
             {review.contains_spoiler ? (
               <p className="italic text-muted-foreground">
-                [review berisi spoiler — buka di halaman ini buat baca]
+                [review berisi spoiler]
               </p>
             ) : null}
             {review.review_text && (
