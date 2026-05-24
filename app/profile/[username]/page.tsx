@@ -164,6 +164,13 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
   });
 
   const profileBackdrop = tmdbImage(favorites[0]?.backdrop_path ?? favorites[0]?.poster_path, "w780");
+  const favoritePickerInitial = favorites.map((f) => ({
+    tmdb_id: f.tmdb_id,
+    title: f.title,
+    poster_path: f.poster_path,
+    release_date: f.release_date,
+  }));
+  const favoriteSlots = Array.from({ length: 4 }, (_, i) => favorites[i] ?? null);
 
   return (
     <div className="space-y-8 sm:-mt-8">
@@ -254,7 +261,7 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
               initialLocation={profile.location ?? ""}
             />
             <form action="/auth/sign-out" method="post">
-              <button className="rounded-md border border-input px-3 py-1.5 text-sm hover:bg-secondary sm:border-black sm:bg-black sm:text-white sm:hover:bg-black/80">
+              <button className="rounded-md border border-input px-3 py-1.5 text-sm hover:bg-secondary sm:bg-black sm:text-white sm:hover:bg-black/80">
                 Keluar
               </button>
             </form>
@@ -292,18 +299,12 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
           <h2 className="text-xl font-semibold">Film favorit</h2>
           {isOwner && (
             <EditFavoritesDialog
-              initialFavorites={favorites.map((f) => ({
-                tmdb_id: f.tmdb_id,
-                title: f.title,
-                poster_path: f.poster_path,
-                release_date: f.release_date,
-              }))}
+              initialFavorites={favoritePickerInitial}
             />
           )}
         </div>
         <div className="grid max-w-md grid-cols-4 gap-2">
-          {Array.from({ length: 4 }).map((_, i) => {
-            const fav = favorites[i];
+          {favoriteSlots.map((fav, i) => {
             if (fav) {
               const poster = tmdbImage(fav.poster_path, "w185");
               return (
@@ -328,12 +329,28 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
                 </Link>
               );
             }
+            if (isOwner) {
+              return (
+                <EditFavoritesDialog
+                  key={`fav-empty-${i}`}
+                  initialFavorites={favoritePickerInitial}
+                  trigger={
+                    <button
+                      type="button"
+                      className="flex aspect-[2/3] w-full items-center justify-center rounded-md border border-dashed border-border bg-secondary/40 text-center text-[10px] text-muted-foreground transition-colors hover:border-input hover:bg-secondary hover:text-foreground"
+                    >
+                      + Tambah
+                    </button>
+                  }
+                />
+              );
+            }
             return (
               <div
                 key={`fav-empty-${i}`}
                 className="flex aspect-[2/3] items-center justify-center rounded-md border border-dashed border-border bg-secondary/40 text-center text-[10px] text-muted-foreground"
               >
-                {isOwner ? "+ Tambah" : "—"}
+                —
               </div>
             );
           })}

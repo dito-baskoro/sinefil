@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import type { ReactNode } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
@@ -21,8 +22,10 @@ const MAX = 4;
 
 export function EditFavoritesDialog({
   initialFavorites,
+  trigger,
 }: {
   initialFavorites: PickableMovie[];
+  trigger?: ReactNode;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -52,9 +55,11 @@ export function EditFavoritesDialog({
       }}
     >
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          Edit favorit
-        </Button>
+        {trigger ?? (
+          <Button variant="outline" size="sm">
+            Edit favorit
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="max-w-lg">
         <DialogHeader>
