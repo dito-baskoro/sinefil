@@ -88,7 +88,7 @@ export function EditBioDialog({
           <div className="space-y-2">
             <Label>Foto profil</Label>
             <div className="flex items-center gap-3">
-              <div className="h-16 w-16 overflow-hidden rounded-full border border-border">
+              <div className="h-16 w-16 overflow-hidden rounded-full border border-[rgb(102,119,136)]">
                 {previewSrc ? (
                   <Image
                     src={previewSrc}

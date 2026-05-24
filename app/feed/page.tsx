@@ -221,7 +221,7 @@ function FeedItem({
             href={`/profile/${event.actor.username}`}
             className="flex items-center gap-1.5 hover:underline"
           >
-            <div className="h-6 w-6 overflow-hidden rounded-full border border-border">
+            <div className="h-6 w-6 overflow-hidden rounded-full border border-[rgb(102,119,136)]">
               {event.actor.avatar_url ? (
                 <Image
                   src={event.actor.avatar_url}

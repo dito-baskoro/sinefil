@@ -153,7 +153,7 @@ export default async function ProfilePage({ params }: { params: Promise<Params> 
   return (
     <div className="space-y-8">
       <header className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-        <div className="h-24 w-24 overflow-hidden rounded-full border border-border">
+        <div className="h-24 w-24 overflow-hidden rounded-full border border-[rgb(102,119,136)]">
           {profile.avatar_url ? (
             <Image
               src={profile.avatar_url}

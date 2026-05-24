@@ -44,7 +44,7 @@ export function ReviewCard({
     <article className="rounded-md border border-border bg-card p-4">
       <header className="flex items-start gap-3">
         <Link href={`/profile/${review.author.username}`} className="shrink-0">
-          <div className="h-9 w-9 overflow-hidden rounded-full">
+          <div className="h-9 w-9 overflow-hidden rounded-full border border-[rgb(102,119,136)]">
             {review.author.avatar_url ? (
               <Image
                 src={review.author.avatar_url}

@@ -84,7 +84,7 @@ export default async function SearchPage({
                     href={`/profile/${u.username}`}
                     className="flex h-[78px] items-center gap-3 rounded-md border border-border p-3 hover:bg-secondary"
                   >
-                    <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full">
+                    <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-[rgb(102,119,136)]">
                       {u.avatar_url ? (
                         <Image
                           src={u.avatar_url}

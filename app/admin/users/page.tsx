@@ -117,7 +117,7 @@ export default async function AdminUsersPage({
                     href={`/profile/${u.username}`}
                     className="flex min-w-0 flex-1 items-center gap-3 hover:opacity-80"
                   >
-                    <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full">
+                    <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-[rgb(102,119,136)]">
                       {u.avatar_url ? (
                         <Image
                           src={u.avatar_url}

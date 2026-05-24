@@ -63,7 +63,7 @@ export default async function FollowingPage({ params }: { params: Promise<Params
                 href={`/profile/${p.username}`}
                 className="flex items-center gap-3 rounded-md border border-border p-3 hover:bg-secondary"
               >
-                <div className="h-10 w-10 overflow-hidden rounded-full border border-border">
+                <div className="h-10 w-10 overflow-hidden rounded-full border border-[rgb(102,119,136)]">
                   {p.avatar_url ? (
                     <Image
                       src={p.avatar_url}

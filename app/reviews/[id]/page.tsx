@@ -154,7 +154,7 @@ export default async function ReviewDetailPage({ params }: { params: Promise<Par
             href={`/profile/${author.username}`}
             className="flex items-center gap-2 hover:underline"
           >
-            <div className="h-9 w-9 overflow-hidden rounded-full border border-border">
+            <div className="h-9 w-9 overflow-hidden rounded-full border border-[rgb(102,119,136)]">
               {author.avatar_url ? (
                 <Image
                   src={author.avatar_url}
@@ -302,7 +302,7 @@ export default async function ReviewDetailPage({ params }: { params: Promise<Par
                     href={`/profile/${c.author.username}`}
                     className="flex items-center gap-2 hover:underline"
                   >
-                    <div className="h-6 w-6 overflow-hidden rounded-full border border-border">
+                    <div className="h-6 w-6 overflow-hidden rounded-full border border-[rgb(102,119,136)]">
                       {c.author.avatar_url ? (
                         <Image
                           src={c.author.avatar_url}

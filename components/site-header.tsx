@@ -1,10 +1,11 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Film, LogIn, Search } from "lucide-react";
+import { LogIn, Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
 import { DefaultAvatar } from "@/components/default-avatar";
 import { HeaderMenu } from "@/components/header-menu";
+import { Logo } from "@/components/logo";
 
 export async function SiteHeader() {
   let isLoggedIn = false;
@@ -33,10 +34,7 @@ export async function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur">
       <div className="container flex h-14 items-center gap-4">
-        <Link href="/" className="flex items-center gap-2 font-bold tracking-tight">
-          <Film className="h-5 w-5 text-primary" />
-          <span className="text-lg">Sinefil</span>
-        </Link>
+        <Logo size="sm" />
 
         <nav className="hidden items-center gap-4 text-sm text-muted-foreground sm:flex">
           {isLoggedIn && (
@@ -54,7 +52,7 @@ export async function SiteHeader() {
           )}
         </nav>
 
-        <form action="/search" className="ml-auto flex max-w-sm flex-1 items-center">
+        <form action="/search" className="ml-auto hidden max-w-sm flex-1 items-center sm:flex">
           <label className="flex w-full items-center gap-2 rounded-md border border-input bg-background px-3 py-1.5 text-sm focus-within:ring-2 focus-within:ring-ring">
             <Search className="h-4 w-4 text-muted-foreground" aria-hidden />
             <input
@@ -67,13 +65,21 @@ export async function SiteHeader() {
           </label>
         </form>
 
+        <Link
+          href="/search"
+          aria-label="Cari"
+          className="ml-auto inline-flex h-10 w-10 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground sm:hidden"
+        >
+          <Search className="h-5 w-5" aria-hidden />
+        </Link>
+
         {isLoggedIn ? (
           <Link
             href={username ? `/profile/${username}` : "/onboarding"}
             className="flex items-center gap-2 rounded-full text-sm hover:opacity-80"
             aria-label={username ? `Profil ${username}` : "Selesaikan onboarding"}
           >
-            <div className="h-8 w-8 overflow-hidden rounded-full">
+            <div className="h-8 w-8 overflow-hidden rounded-full border border-[rgb(102,119,136)]">
               {avatarUrl ? (
                 <Image
                   src={avatarUrl}
