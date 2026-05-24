@@ -1,0 +1,27 @@
+app/profile/[username]/following/page.tsx
+  89fed5b6ed467cd7 34,41,80,84-94
+app/profile/[username]/page.tsx
+  89fed5b6ed467cd7 46-86,101-103,116,126,166,169-176,178,180-183,185-201,203-213,215-245,249,257,263-270,274-288,344-354,418-484
+app/profile/[username]/followers/page.tsx
+  89fed5b6ed467cd7 34,41,80,84-94
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.23",
+  "base_commit_sha": "9e87ee944554cba990bb6dcce51b07c1f3be170a",
+  "prompts": {
+    "89fed5b6ed467cd7": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e5931-f1f2-7d73-a6e0-4a1f8de6be0c",
+        "model": "gpt-5.5"
+      },
+      "human_author": "dito-baskoro <ditoabaskoro@gmail.com>",
+      "messages": [],
+      "total_additions": 284,
+      "total_deletions": 151,
+      "accepted_lines": 259,
+      "overriden_lines": 0
+    }
+  }
+}
